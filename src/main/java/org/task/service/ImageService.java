@@ -2,6 +2,8 @@ package org.task.service;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.task.entity.Image;
@@ -17,26 +19,25 @@ public class ImageService {
     private ImageRepository imageRepository;
     private AuthService authService;
 
-    public ImageService(ImageRepository imageRepository) {
-        this.imageRepository = imageRepository;
-    }
+    private String auth;
 
-    public Page getPage() {
-        RestTemplate template = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.AUTHORIZATION, authService.getToken());
-        HttpEntity<String> entity = new HttpEntity<>("body", headers);
-        return template.postForObject(LINK, entity, Page.class);
+    public ImageService(ImageRepository imageRepository, AuthService authService) {
+        this.imageRepository = imageRepository;
+        this.authService = authService;
     }
 
     public Page getPage(int page) {
         RestTemplate template = new RestTemplate();
-        return template.getForObject(LINK + "?page=" + page, Page.class);
+        HttpEntity<String> entity = addAuthHeader();
+        ResponseEntity<Page> responseEntity = template.exchange(LINK + "?page=" + page, HttpMethod.GET, entity, Page.class);
+        return responseEntity.getBody();
     }
 
     public Image getImage(String id) {
         RestTemplate template = new RestTemplate();
-        return template.getForObject(LINK + "/" + id, Image.class);
+        HttpEntity<String> entity = addAuthHeader();
+        ResponseEntity<Image> responseEntity = template.exchange(LINK + "/" + id, HttpMethod.GET, entity, Image.class);
+        return responseEntity.getBody();
     }
 
     public void saveAll(List<Image> images) {
@@ -45,5 +46,13 @@ public class ImageService {
 
     public List<Image> findAll(String param) {
         return imageRepository.findAllByParam(param);
+    }
+
+    private HttpEntity<String> addAuthHeader() {
+        HttpHeaders headers = new HttpHeaders();
+        if (auth == null)
+            auth = authService.getToken();
+        headers.add(HttpHeaders.AUTHORIZATION, auth);
+        return new HttpEntity<>(headers);
     }
 }
