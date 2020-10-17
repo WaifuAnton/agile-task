@@ -1,5 +1,7 @@
 package org.task.service;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,8 +22,10 @@ public class AuthService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
         RestTemplate template = new RestTemplate();
         ResponseEntity<String> response = template.postForEntity(link, entity, String.class);
-        if (response.getStatusCode() == HttpStatus.OK)
-            return response.getBody();
+        if (response.getStatusCode() == HttpStatus.OK) {
+            JSONObject jsonObject = new JSONObject(response.getBody());
+            return jsonObject.getString("token");
+        }
         return null;
     }
 }
