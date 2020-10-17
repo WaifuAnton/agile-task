@@ -36,4 +36,8 @@ public class ImageService {
     public void saveAll(List<Image> images) {
         imageRepository.saveAll(images);
     }
+
+    public List<Image> findAll(String param) {
+        return imageRepository.findAllByParam(param);
+    }
 }
